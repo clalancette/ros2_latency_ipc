@@ -1,4 +1,4 @@
-#include "latency_log.h"
+#include "latency_log.hpp"
 
 #include <algorithm>
 #include <fstream>

@@ -8,7 +8,7 @@
 #include <rcutils/cmdline_parser.h>
 #include <std_msgs/msg/string.hpp>
 
-#include "latency_log.h"
+#include "latency_log.hpp"
 
 class LatencyRec : public rclcpp::Node
 {
