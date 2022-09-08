@@ -19,10 +19,10 @@
 #include <string>
 
 void evaluate(
-  std::vector<uint64_t> & lat_arr_, size_t rec_size_, size_t warmups_,
-  const std::string & log_file_);
+  std::vector<uint64_t> & lat_arr, size_t rec_size, size_t warmups,
+  const std::string & log_file);
 
 void log2file(
-  const std::vector<uint64_t> & lat_arr_, size_t rec_size_, const std::string & log_file_);
+  const std::vector<uint64_t> & lat_arr, size_t rec_size, const std::string & log_file);
 
 #endif  // LATENCY_LOG_HPP_

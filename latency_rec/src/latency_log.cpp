@@ -24,65 +24,69 @@
 
 // evaluation
 void evaluate(
-  std::vector<uint64_t> & lat_arr_, size_t rec_size_, size_t warmups_,
-  const std::string & log_file_)
+  std::vector<uint64_t> & lat_arr, size_t rec_size, size_t warmups,
+  const std::string & log_file)
 {
+  std::vector<uint64_t> latency_without_warmups;
   std::stringstream ss;
 
-  // remove warmup runs
-  if (lat_arr_.size() >= warmups_) {
-    lat_arr_.erase(lat_arr_.begin(), lat_arr_.begin() + warmups_);
+  if (lat_arr.size() <= warmups) {
+    // Not enough data in here, so print that out and quit
+    std::cout << "Data only contains warmups, analysis skipped" << std::endl;
+    return;
   }
 
+  // remove warmup runs
+  std::copy(lat_arr.begin() + warmups, lat_arr.end(), std::back_inserter(latency_without_warmups));
+
   // evaluate all
-  size_t sum_msg = lat_arr_.size();
+  size_t sum_msg = latency_without_warmups.size();
   ss << "--------------------------------------------" << std::endl;
   ss << "Messages received             : " << sum_msg << std::endl;
-  if (sum_msg > warmups_) {
-    uint64_t sum_time = std::accumulate(lat_arr_.begin(), lat_arr_.end(), 0LL);
-    uint64_t avg_time = sum_time / sum_msg;
-    auto min_it = std::min_element(lat_arr_.begin(), lat_arr_.end());
-    auto max_it = std::max_element(lat_arr_.begin(), lat_arr_.end());
-    size_t min_pos = min_it - lat_arr_.begin();
-    size_t max_pos = max_it - lat_arr_.begin();
-    uint64_t min_time = *min_it;
-    uint64_t max_time = *max_it;
-    ss << "Message size received         : " << rec_size_ / 1024 << " kB" << std::endl;
-    ss << "Message average latency       : " << avg_time << " us" << std::endl;
-    ss << "Message min latency           : " << min_time << " us @ " << min_pos << std::endl;
-    ss << "Message max latency           : " << max_time << " us @ " << max_pos << std::endl;
-    ss << "Throughput                    : " <<
-      static_cast<int>(((rec_size_ * sum_msg) / 1024.0) / (sum_time / 1000.0 / 1000.0)) <<
-      " kB/s" << std::endl;
-    ss << "                              : " <<
-      static_cast<int>(((rec_size_ * sum_msg) / 1024.0 / 1024.0) / (sum_time / 1000.0 / 1000.0)) <<
-      " MB/s" << std::endl;
-    ss << "                              : " <<
-      static_cast<int>(sum_msg / (sum_time / 1000.0 / 1000.0)) << " Msg/s" << std::endl;
-  }
+  uint64_t sum_time = std::accumulate(latency_without_warmups.begin(), latency_without_warmups.end(), 0LL);
+  uint64_t avg_time = sum_time / sum_msg;
+  auto min_it = std::min_element(latency_without_warmups.begin(), latency_without_warmups.end());
+  auto max_it = std::max_element(latency_without_warmups.begin(), latency_without_warmups.end());
+  size_t min_pos = min_it - latency_without_warmups.begin();
+  size_t max_pos = max_it - latency_without_warmups.begin();
+  uint64_t min_time = *min_it;
+  uint64_t max_time = *max_it;
+  ss << "Message size received         : " << rec_size / 1024 << " kB" << std::endl;
+  ss << "Message average latency       : " << avg_time << " us" << std::endl;
+  ss << "Message min latency           : " << min_time << " us @ " << min_pos << std::endl;
+  ss << "Message max latency           : " << max_time << " us @ " << max_pos << std::endl;
+  ss << "Throughput                    : " <<
+    static_cast<int>(((rec_size * sum_msg) / 1024.0) / (sum_time / 1000.0 / 1000.0)) <<
+    " kB/s" << std::endl;
+  ss << "                              : " <<
+    static_cast<int>(((rec_size * sum_msg) / 1024.0 / 1024.0) / (sum_time / 1000.0 / 1000.0)) <<
+    " MB/s" << std::endl;
+  ss << "                              : " <<
+    static_cast<int>(sum_msg / (sum_time / 1000.0 / 1000.0)) << " Msg/s" << std::endl;
+
   ss << "--------------------------------------------" << std::endl;
 
   // log to console
-  std::cout << ss.str();
+  std::cout << ss.str() << std::endl;
 
   // log into logfile (append)
-  if (!log_file_.empty()) {
+  if (!log_file.empty()) {
     std::ofstream ofile;
-    ofile.open(log_file_, std::ios::out | std::ios::app);
+    ofile.open(log_file, std::ios::out | std::ios::app);
     ofile << ss.str();
   }
 }
 
 void log2file(
-  const std::vector<uint64_t> & lat_arr_, size_t rec_size_, const std::string & log_file_)
+  const std::vector<uint64_t> & lat_arr, size_t rec_size, const std::string & log_file)
 {
-  if (!log_file_.empty()) {
+  if (!log_file.empty()) {
     std::stringstream ss;
-    ss << std::setw(6) << std::setfill('0') << rec_size_ / 1024;
+    ss << std::setw(6) << std::setfill('0') << rec_size / 1024;
     std::string rec_size_s = ss.str();
 
-    std::ofstream ofile(rec_size_s + "-" + log_file_);
+    std::ofstream ofile(rec_size_s + "-" + log_file);
     std::ostream_iterator<uint64_t> output_iterator(ofile, "\n");
-    std::copy(lat_arr_.begin(), lat_arr_.end(), output_iterator);
+    std::copy(lat_arr.begin(), lat_arr.end(), output_iterator);
   }
 }

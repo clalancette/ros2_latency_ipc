@@ -16,6 +16,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <sstream>
 
 #include "rcutils/cmdline_parser.h"
 
@@ -40,6 +41,7 @@ public:
     msg_ = std_msgs::msg::String();
     snd_size_ *= 1024;
     msg_.data.resize(snd_size_);
+    std::fill(msg_.data.begin(), msg_.data.end(), '#');
 
     // define qos
     auto qos = rclcpp::QoS(rclcpp::KeepLast(0)).best_effort().durability_volatile();
@@ -56,10 +58,15 @@ public:
   {
     // check for termination
     if (snd_pkgs_ < runs_ + warmups_) {
-      // store send time into string (bad style for sure)
+
       uint64_t snd_time = std::chrono::duration_cast<std::chrono::microseconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
-      *reinterpret_cast<uint64_t *>(&msg_.data[0]) = snd_time;
+
+      std::stringstream msg_stream;
+      msg_stream << "0" << snd_time;
+
+      std::string tmp_str = msg_stream.str();
+      memcpy(&msg_.data[0], tmp_str.c_str(), tmp_str.size());
 
       // and publish the message
       pub_->publish(msg_);
@@ -68,8 +75,12 @@ public:
       // stop timer
       timer_->cancel();
 
-      // send final messages to trigger latency_rec to summarize
-      *reinterpret_cast<uint64_t *>(&msg_.data[0]) = 42;
+      std::stringstream msg_stream;
+      msg_stream << "1";
+
+      std::string tmp_str = msg_stream.str();
+      memcpy(&msg_.data[0], tmp_str.c_str(), tmp_str.size());
+
       pub_->publish(msg_);
 
       std::cout << "Messages sent           : " << snd_pkgs_ - warmups_ << std::endl;

@@ -15,6 +15,7 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -50,10 +51,14 @@ public:
       std::chrono::system_clock::now().time_since_epoch()).count();
 
     // read send time
-    uint64_t snd_time = *reinterpret_cast<uint64_t *>(&msg->data[0]);
+    std::stringstream msg_stream(msg->data);
+    uint64_t snd_time;
+    char stop_byte;
+
+    msg_stream >> stop_byte >> snd_time;
 
     // final message ? :-)
-    if (snd_time == 42) {
+    if (stop_byte == '1') {
       // evaluate all
       evaluate(latency_array_, rec_size_, warmups_, log_file_);
 
