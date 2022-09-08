@@ -24,7 +24,7 @@
 
 // evaluation
 void evaluate(
-  std::vector<uint64_t> & lat_arr, size_t rec_size, size_t warmups,
+  const std::vector<uint64_t> & lat_arr, size_t rec_size, size_t warmups,
   const std::string & log_file)
 {
   std::vector<uint64_t> latency_without_warmups;
