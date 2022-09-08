@@ -12,11 +12,13 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rcutils REQUIRED)
 find_package(std_msgs REQUIRED)
 
 add_executable(${PROJECT_NAME} src/latency_log.cpp src/latency_rec.cpp)
 target_link_libraries(${PROJECT_NAME}
   rclcpp::rclcpp
+  rcutils::rcutils
   ${std_msgs_TARGETS}
 )
 
