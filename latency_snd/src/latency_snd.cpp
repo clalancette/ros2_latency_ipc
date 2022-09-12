@@ -18,10 +18,12 @@
 #include <memory>
 #include <sstream>
 
-#include "rcutils/cmdline_parser.h"
-
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
 #include <std_msgs/msg/string.hpp>
+
+namespace latency_snd
+{
 
 class LatencySnd final : public rclcpp::Node
 {
@@ -119,17 +121,6 @@ private:
   uint64_t warmup_delay_us_ = 10000;
 };
 
-int main(int argc, char * argv[])
-{
-  rclcpp::init(argc, argv);
+}  // namespace latency_snd
 
-  rclcpp::NodeOptions options;
-
-  auto node = std::make_shared<LatencySnd>(options);
-
-  rclcpp::spin(node);
-
-  rclcpp::shutdown();
-
-  return 0;
-}
+RCLCPP_COMPONENTS_REGISTER_NODE(latency_snd::LatencySnd)
