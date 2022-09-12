@@ -29,8 +29,8 @@
 class LatencyRec : public rclcpp::Node
 {
 public:
-  LatencyRec(int delay, const std::string & log_file)
-  : Node("LatencyRec"), delay_(delay), log_file_(log_file)
+  LatencyRec(const std::string & log_file)
+  : Node("LatencyRec"), log_file_(log_file)
   {
     // prepare timestamp array to avoid allocations
     latency_array_.reserve(10000);
@@ -46,10 +46,6 @@ public:
 
   void OnReceive(std_msgs::msg::String::UniquePtr msg)
   {
-    // take receive time
-    uint64_t rec_time = std::chrono::duration_cast<std::chrono::microseconds>(
-      std::chrono::system_clock::now().time_since_epoch()).count();
-
     // read send time
     std::stringstream msg_stream(msg->data);
     uint64_t snd_time;
@@ -57,10 +53,25 @@ public:
 
     msg_stream >> stop_byte >> snd_time;
 
-    // final message ? :-)
-    if (stop_byte == '1') {
-      // evaluate all
-      evaluate(latency_array_, rec_size_, warmups_, log_file_);
+    if (stop_byte == '2') {
+      // A warmup message, so just throw it away;
+      return;
+    }
+
+    // take receive time
+    uint64_t rec_time = std::chrono::duration_cast<std::chrono::microseconds>(
+      std::chrono::system_clock::now().time_since_epoch()).count();
+
+    if (stop_byte == '0') {
+      // A regular message
+
+      // update latency and size
+      uint64_t latency = rec_time - snd_time;
+      latency_array_.push_back(latency);
+      rec_size_ = msg->data.size();
+    } else if (stop_byte == '1') {
+      // Final message, evaluate
+      evaluate(latency_array_, rec_size_, log_file_);
 
       // log all latencies into file
       log2file(latency_array_, rec_size_, log_file_);
@@ -68,24 +79,13 @@ public:
       // reset latency array and receive size
       latency_array_.clear();
       rec_size_ = 0;
-    } else {
-      // update latency and size
-      uint64_t latency = rec_time - snd_time;
-      latency_array_.push_back(latency);
-      rec_size_ = msg->data.size();
-      // delay callback
-      if (delay_ > 0) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(delay_));
-      }
     }
   }
 
 private:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_;
   std::vector<uint64_t> latency_array_;
-  const size_t warmups_ = 10;
   size_t rec_size_ = 0;
-  size_t delay_ = 0;
   std::string log_file_;
 };
 
@@ -93,13 +93,6 @@ int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
 
-  int delay(100);  // callback process delay in ms
-  {
-    char * cli_option = rcutils_cli_get_option(argv, argv + argc, "-d");
-    if (cli_option) {
-      delay = std::atoi(cli_option);
-    }
-  }
   std::string log_file;  // base file name to export results
   {
     char * cli_option = rcutils_cli_get_option(argv, argv + argc, "-l");
@@ -108,7 +101,7 @@ int main(int argc, char * argv[])
     }
   }
 
-  rclcpp::spin(std::make_shared<LatencyRec>(delay, log_file));
+  rclcpp::spin(std::make_shared<LatencyRec>(log_file));
   rclcpp::shutdown();
 
   return 0;

@@ -56,32 +56,35 @@ public:
 
   void OnPublish()
   {
-    // check for termination
-    if (snd_pkgs_ < runs_ + warmups_) {
+    char key;
 
-      uint64_t snd_time = std::chrono::duration_cast<std::chrono::microseconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
-
-      std::stringstream msg_stream;
-      msg_stream << "0" << snd_time;
-
-      std::string tmp_str = msg_stream.str();
-      memcpy(&msg_.data[0], tmp_str.c_str(), tmp_str.size());
-
-      // and publish the message
-      pub_->publish(msg_);
-      snd_pkgs_++;
+    if (snd_pkgs_ < warmups_) {
+      // 2 means a warmup packet
+      key = '2';
+    } else if (snd_pkgs_ < runs_ + warmups_) {
+      // 0 means a data packet
+      key = '0';
     } else {
+      // 1 means EOF
+      key = '1';
+    }
+
+    uint64_t snd_time = std::chrono::duration_cast<std::chrono::microseconds>(
+      std::chrono::system_clock::now().time_since_epoch()).count();
+
+    fprintf(stderr, "Send time: %lu\n", snd_time);
+
+    std::stringstream msg_stream;
+    msg_stream << key << snd_time;
+
+    std::string tmp_str = msg_stream.str();
+    memcpy(&msg_.data[0], tmp_str.c_str(), tmp_str.size());
+
+    pub_->publish(msg_);
+
+    if (key == '1') {
       // stop timer
       timer_->cancel();
-
-      std::stringstream msg_stream;
-      msg_stream << "1";
-
-      std::string tmp_str = msg_stream.str();
-      memcpy(&msg_.data[0], tmp_str.c_str(), tmp_str.size());
-
-      pub_->publish(msg_);
 
       std::cout << "Messages sent           : " << snd_pkgs_ - warmups_ << std::endl;
       std::cout << "----------------------------------------" << std::endl;
@@ -89,6 +92,8 @@ public:
       // shutdown here
       rclcpp::shutdown();
     }
+
+    snd_pkgs_++;
   }
 
 private:

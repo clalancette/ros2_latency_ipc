@@ -19,8 +19,7 @@
 #include <string>
 
 void evaluate(
-  const std::vector<uint64_t> & lat_arr, size_t rec_size, size_t warmups,
-  const std::string & log_file);
+  const std::vector<uint64_t> & lat_arr, size_t rec_size, const std::string & log_file);
 
 void log2file(
   const std::vector<uint64_t> & lat_arr, size_t rec_size, const std::string & log_file);

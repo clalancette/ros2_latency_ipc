@@ -24,31 +24,20 @@
 
 // evaluation
 void evaluate(
-  const std::vector<uint64_t> & lat_arr, size_t rec_size, size_t warmups,
-  const std::string & log_file)
+  const std::vector<uint64_t> & lat_arr, size_t rec_size, const std::string & log_file)
 {
-  std::vector<uint64_t> latency_without_warmups;
   std::stringstream ss;
 
-  if (lat_arr.size() <= warmups) {
-    // Not enough data in here, so print that out and quit
-    std::cout << "Data only contains warmups, analysis skipped" << std::endl;
-    return;
-  }
-
-  // remove warmup runs
-  std::copy(lat_arr.begin() + warmups, lat_arr.end(), std::back_inserter(latency_without_warmups));
-
   // evaluate all
-  size_t sum_msg = latency_without_warmups.size();
+  size_t sum_msg = lat_arr.size();
   ss << "--------------------------------------------" << std::endl;
   ss << "Messages received             : " << sum_msg << std::endl;
-  uint64_t sum_time = std::accumulate(latency_without_warmups.begin(), latency_without_warmups.end(), 0LL);
+  uint64_t sum_time = std::accumulate(lat_arr.begin(), lat_arr.end(), 0LL);
   uint64_t avg_time = sum_time / sum_msg;
-  auto min_it = std::min_element(latency_without_warmups.begin(), latency_without_warmups.end());
-  auto max_it = std::max_element(latency_without_warmups.begin(), latency_without_warmups.end());
-  size_t min_pos = min_it - latency_without_warmups.begin();
-  size_t max_pos = max_it - latency_without_warmups.begin();
+  auto min_it = std::min_element(lat_arr.begin(), lat_arr.end());
+  auto max_it = std::max_element(lat_arr.begin(), lat_arr.end());
+  size_t min_pos = min_it - lat_arr.begin();
+  size_t max_pos = max_it - lat_arr.begin();
   uint64_t min_time = *min_it;
   uint64_t max_time = *max_it;
   ss << "Message size received         : " << rec_size / 1024 << " kB" << std::endl;
