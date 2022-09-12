@@ -28,7 +28,7 @@ namespace latency_snd
 class LatencySnd final : public rclcpp::Node
 {
 public:
-  LatencySnd(const rclcpp::NodeOptions & options)
+  LatencySnd(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
   : rclcpp::Node("LatencySnd", options)
   {
     runs_ = declare_parameter("runs", 100);

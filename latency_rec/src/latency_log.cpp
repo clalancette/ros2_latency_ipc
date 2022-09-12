@@ -24,7 +24,7 @@
 
 // evaluation
 void evaluate(
-  const std::vector<uint64_t> & lat_arr, size_t rec_size, const std::string & log_file)
+  const std::vector<uint64_t> & lat_arr, size_t rec_size)
 {
   std::stringstream ss;
 
@@ -57,25 +57,4 @@ void evaluate(
 
   // log to console
   std::cout << ss.str() << std::endl;
-
-  // log into logfile (append)
-  if (!log_file.empty()) {
-    std::ofstream ofile;
-    ofile.open(log_file, std::ios::out | std::ios::app);
-    ofile << ss.str();
-  }
-}
-
-void log2file(
-  const std::vector<uint64_t> & lat_arr, size_t rec_size, const std::string & log_file)
-{
-  if (!log_file.empty()) {
-    std::stringstream ss;
-    ss << std::setw(6) << std::setfill('0') << rec_size / 1024;
-    std::string rec_size_s = ss.str();
-
-    std::ofstream ofile(rec_size_s + "-" + log_file);
-    std::ostream_iterator<uint64_t> output_iterator(ofile, "\n");
-    std::copy(lat_arr.begin(), lat_arr.end(), output_iterator);
-  }
 }

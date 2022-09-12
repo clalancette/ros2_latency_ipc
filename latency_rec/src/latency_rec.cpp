@@ -19,18 +19,16 @@
 #include <string>
 #include <vector>
 
-#include "rcutils/cmdline_parser.h"
-
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/string.hpp>
 
 #include "latency_log.hpp"
 
-class LatencyRec : public rclcpp::Node
+class LatencyRec final : public rclcpp::Node
 {
 public:
-  LatencyRec(const std::string & log_file)
-  : Node("LatencyRec"), log_file_(log_file)
+  LatencyRec(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
+  : rclcpp::Node("LatencyRec", options)
   {
     // prepare timestamp array to avoid allocations
     latency_array_.reserve(10000);
@@ -71,10 +69,7 @@ public:
       rec_size_ = msg->data.size();
     } else if (stop_byte == '1') {
       // Final message, evaluate
-      evaluate(latency_array_, rec_size_, log_file_);
-
-      // log all latencies into file
-      log2file(latency_array_, rec_size_, log_file_);
+      evaluate(latency_array_, rec_size_);
 
       // reset latency array and receive size
       latency_array_.clear();
@@ -86,22 +81,17 @@ private:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_;
   std::vector<uint64_t> latency_array_;
   size_t rec_size_ = 0;
-  std::string log_file_;
 };
 
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
 
-  std::string log_file;  // base file name to export results
-  {
-    char * cli_option = rcutils_cli_get_option(argv, argv + argc, "-l");
-    if (cli_option) {
-      log_file = cli_option;
-    }
-  }
+  rclcpp::NodeOptions options;
 
-  rclcpp::spin(std::make_shared<LatencyRec>(log_file));
+  auto node = std::make_shared<LatencyRec>(options);
+
+  rclcpp::spin(node);
   rclcpp::shutdown();
 
   return 0;
