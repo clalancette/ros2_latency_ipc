@@ -72,7 +72,20 @@ public:
     uint64_t snd_time = std::chrono::duration_cast<std::chrono::microseconds>(
       std::chrono::system_clock::now().time_since_epoch()).count();
 
-    fprintf(stderr, "Send time: %lu\n", snd_time);
+    // How often this method gets called depends on what the user passed in for the delay.
+    // However, we want to make sure that warmups always take the same amount of time,
+    // so only send a warmup packet if enough time has elapsed since the last warmup packet.
+    if (key == '2') {
+      if ((snd_time - last_warmup_packet_time_) < warmup_delay_us_) {
+        return;
+      }
+
+      last_warmup_packet_time_ = snd_time;
+
+      fprintf(stderr, "Send time (warmup): %lu\n", snd_time);
+    } else {
+      fprintf(stderr, "Send time: %lu\n", snd_time);
+    }
 
     std::stringstream msg_stream;
     msg_stream << key << snd_time;
@@ -105,6 +118,8 @@ private:
   const size_t warmups_ = 10;
   size_t snd_size_ = 0;
   size_t delay_ = 0;
+  uint64_t last_warmup_packet_time_ = 0;
+  uint64_t warmup_delay_us_ = 10000;
 };
 
 int main(int argc, char * argv[])
