@@ -60,7 +60,7 @@ public:
 
     // take receive time
     uint64_t rec_time = std::chrono::duration_cast<std::chrono::microseconds>(
-      std::chrono::system_clock::now().time_since_epoch()).count();
+      std::chrono::steady_clock::now().time_since_epoch()).count();
 
     if (stop_byte == '0') {
       // A regular message

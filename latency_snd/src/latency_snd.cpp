@@ -56,26 +56,18 @@ public:
 
   void OnPublish()
   {
+    uint64_t snd_time = std::chrono::duration_cast<std::chrono::microseconds>(
+      std::chrono::steady_clock::now().time_since_epoch()).count();
+
     char key;
 
     if (snd_pkgs_ < warmups_) {
       // 2 means a warmup packet
       key = '2';
-    } else if (snd_pkgs_ < runs_ + warmups_) {
-      // 0 means a data packet
-      key = '0';
-    } else {
-      // 1 means EOF
-      key = '1';
-    }
 
-    uint64_t snd_time = std::chrono::duration_cast<std::chrono::microseconds>(
-      std::chrono::system_clock::now().time_since_epoch()).count();
-
-    // How often this method gets called depends on what the user passed in for the delay.
-    // However, we want to make sure that warmups always take the same amount of time,
-    // so only send a warmup packet if enough time has elapsed since the last warmup packet.
-    if (key == '2') {
+      // How often this method gets called depends on what the user passed in for the delay.
+      // However, we want to make sure that warmups always take the same amount of time,
+      // so only send a warmup packet if enough time has elapsed since the last warmup packet.
       if ((snd_time - last_warmup_packet_time_) < warmup_delay_us_) {
         return;
       }
@@ -83,8 +75,14 @@ public:
       last_warmup_packet_time_ = snd_time;
 
       fprintf(stderr, "Send time (warmup): %lu\n", snd_time);
-    } else {
+    } else if (snd_pkgs_ < runs_ + warmups_) {
+      // 0 means a data packet
+      key = '0';
       fprintf(stderr, "Send time: %lu\n", snd_time);
+    } else {
+      // 1 means EOF
+      key = '1';
+      fprintf(stderr, "Send time (EOF): %lu\n", snd_time);
     }
 
     std::stringstream msg_stream;
