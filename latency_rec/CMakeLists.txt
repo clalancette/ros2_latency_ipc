@@ -12,17 +12,26 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 find_package(std_msgs REQUIRED)
 
-add_executable(${PROJECT_NAME} src/latency_log.cpp src/latency_rec.cpp)
-target_link_libraries(${PROJECT_NAME}
+add_library(${PROJECT_NAME}_lib SHARED src/latency_log.cpp src/latency_rec.cpp)
+target_link_libraries(${PROJECT_NAME}_lib
   rclcpp::rclcpp
+  rclcpp_components::component
   ${std_msgs_TARGETS}
 )
 
+rclcpp_components_register_node(${PROJECT_NAME}_lib
+  PLUGIN "latency_rec::LatencyRec"
+  EXECUTABLE latency_rec
+)
+
 install(TARGETS
-  ${PROJECT_NAME}
-  DESTINATION lib/${PROJECT_NAME}
+  ${PROJECT_NAME}_lib
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 if(BUILD_TESTING)

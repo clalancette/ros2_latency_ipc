@@ -20,9 +20,13 @@
 #include <vector>
 
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
 #include <std_msgs/msg/string.hpp>
 
 #include "latency_log.hpp"
+
+namespace latency_rec
+{
 
 class LatencyRec final : public rclcpp::Node
 {
@@ -83,16 +87,6 @@ private:
   size_t rec_size_ = 0;
 };
 
-int main(int argc, char * argv[])
-{
-  rclcpp::init(argc, argv);
+}  // namespace latency_rec
 
-  rclcpp::NodeOptions options;
-
-  auto node = std::make_shared<LatencyRec>(options);
-
-  rclcpp::spin(node);
-  rclcpp::shutdown();
-
-  return 0;
-}
+RCLCPP_COMPONENTS_REGISTER_NODE(latency_rec::LatencyRec)
