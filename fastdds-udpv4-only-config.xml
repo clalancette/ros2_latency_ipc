@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dds>
+  <profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+    <transport_descriptors>
+      <transport_descriptor>
+        <transport_id>udpv4_transport</transport_id>
+	<type>UDPv4</type>
+        <!-- 262144 Works for up to 256Kb -->
+        <!-- 524288 Works for up to 1024Kb -->
+        <!-- 1048576 Works for up to 2048Kb -->
+        <!-- 2097152 Works for up to 4096Kb -->
+        <!-- 4194304 Works for up to 8192Kb -->
+        <!-- In all cases, only uses additional memory when data is received -->
+        <sendBufferSize>4194304</sendBufferSize>
+        <receiveBufferSize>4194304</receiveBufferSize>
+        <interfaceWhiteList>
+          <address>127.0.0.1</address>
+	</interfaceWhiteList>
+      </transport_descriptor>
+    </transport_descriptors>
+
+    <participant profile_name="default_participant" is_default_profile="true">
+      <rtps>
+        <name>default_participant</name>
+        <userTransports>
+          <transport_id>udpv4_transport</transport_id>
+        </userTransports>
+        <!-- This is important because the builtin transports are used by default(!), and don't take into account the dump file -->
+        <useBuiltinTransports>false</useBuiltinTransports>
+      </rtps>
+    </participant>
+
+    <data_writer profile_name="default_pub" is_default_profile="true">
+      <qos>
+        <publishMode>
+          <kind>SYNCHRONOUS</kind>
+        </publishMode>
+      </qos>
+      <historyMemoryPolicy>DYNAMIC</historyMemoryPolicy>
+    </data_writer>
+
+    <data_reader profile_name="default_sub" is_default_profile="true">
+      <historyMemoryPolicy>DYNAMIC</historyMemoryPolicy>
+    </data_reader>
+
+  </profiles>
+
+  <log>
+    <use_default>FALSE</use_default>
+    <consumer>
+      <class>StdoutErrConsumer</class>
+      <property>
+        <name>stderr_threshold</name>
+        <value>Log::Kind::Info</value>
+      </property>
+    </consumer>
+  </log>
+
+</dds>
