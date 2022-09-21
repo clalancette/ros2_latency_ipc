@@ -3,7 +3,7 @@
   <profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
     <transport_descriptors>
       <transport_descriptor>
-        <transport_id>shm_transport_pub</transport_id>
+        <transport_id>shm_transport</transport_id>
         <type>SHM</type>
         <!-- for delivery of up to 8MB (approximate size of 4K video (3840x2160) @ 8 bpp -->
         <segment_size>16777216</segment_size>
@@ -12,18 +12,18 @@
       </transport_descriptor>
     </transport_descriptors>
 
-    <participant profile_name="pub_participant" is_default_profile="true">
+    <participant profile_name="default_participant" is_default_profile="true">
       <rtps>
-        <name>pub_participant</name>
+        <name>default_participant</name>
         <userTransports>
-          <transport_id>shm_transport_pub</transport_id>
+          <transport_id>shm_transport</transport_id>
         </userTransports>
         <!-- This is important because the builtin transports are used by default(!), and don't take into account the dump file -->
         <useBuiltinTransports>false</useBuiltinTransports>
       </rtps>
     </participant>
 
-    <data_writer profile_name="pub" is_default_profile="true">
+    <data_writer profile_name="default_pub" is_default_profile="true">
       <qos>
         <publishMode>
           <kind>SYNCHRONOUS</kind>
@@ -32,7 +32,7 @@
       <historyMemoryPolicy>DYNAMIC</historyMemoryPolicy>
     </data_writer>
 
-    <data_reader profile_name="sub" is_default_profile="true">
+    <data_reader profile_name="default_sub" is_default_profile="true">
       <historyMemoryPolicy>DYNAMIC</historyMemoryPolicy>
     </data_reader>
 
