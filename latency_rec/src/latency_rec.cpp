@@ -70,6 +70,9 @@ public:
       // update latency and size
       uint64_t latency = rec_time - snd_time;
       latency_array_.push_back(latency);
+      if (rec_size_ != 0 && msg->data.size() != rec_size_) {
+        RCLCPP_WARN(get_logger(), "Message of different size included in results!");
+      }
       rec_size_ = msg->data.size();
     } else if (stop_byte == '1') {
       // Final message, evaluate
