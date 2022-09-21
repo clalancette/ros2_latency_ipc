@@ -28,12 +28,13 @@ namespace latency_snd
 class LatencySnd final : public rclcpp::Node
 {
 public:
-  LatencySnd(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
-  : rclcpp::Node("LatencySnd", options)
+  LatencySnd(rclcpp::NodeOptions options = rclcpp::NodeOptions())
+  : rclcpp::Node("LatencySnd", options.use_intra_process_comms(false))
   {
     runs_ = declare_parameter("runs", 100);
     uint64_t snd_size_kb = declare_parameter("send_size_kb", 64);
     uint64_t delay_ms_ = declare_parameter("delay_ms", 100);
+    warmup_time_ms_ = declare_parameter("warmup_time_ms", 100);
 
     // log test
     std::cout << "----------------------------------------" << std::endl;
@@ -59,55 +60,46 @@ public:
 
   void OnPublish()
   {
-    uint64_t snd_time = std::chrono::duration_cast<std::chrono::microseconds>(
+    uint64_t snd_time_us = std::chrono::duration_cast<std::chrono::microseconds>(
       std::chrono::steady_clock::now().time_since_epoch()).count();
+
+    if (start_time_us_ == 0) {
+      start_time_us_ = snd_time_us;
+    }
 
     char key;
 
-    if (snd_pkgs_ < warmups_) {
+    if ((snd_time_us - start_time_us_) < (warmup_time_ms_ * 1000)) {
       // 2 means a warmup packet
       key = '2';
-
-      // How often this method gets called depends on what the user passed in for the delay.
-      // However, we want to make sure that warmups always take the same amount of time,
-      // so only send a warmup packet if enough time has elapsed since the last warmup packet.
-      if ((snd_time - last_warmup_packet_time_) < warmup_delay_us_) {
-        return;
-      }
-
-      last_warmup_packet_time_ = snd_time;
-
-      fprintf(stderr, "Send time (warmup): %lu\n", snd_time);
-    } else if (snd_pkgs_ < runs_ + warmups_) {
+      fprintf(stderr, "Send time (warmup): %lu\n", snd_time_us);
+    } else if (snd_pkgs_ < runs_) {
       // 0 means a data packet
       key = '0';
-      fprintf(stderr, "Send time: %lu\n", snd_time);
+      fprintf(stderr, "Send time: %lu\n", snd_time_us);
     } else {
       // 1 means EOF
       key = '1';
-      fprintf(stderr, "Send time (EOF): %lu\n", snd_time);
+      fprintf(stderr, "Send time (EOF): %lu\n", snd_time_us);
+
+      // stop timer
+      timer_->cancel();
+
+      std::cout << "Messages sent           : " << snd_pkgs_ << std::endl;
+      std::cout << "----------------------------------------" << std::endl;
     }
 
     std::stringstream msg_stream;
-    msg_stream << key << snd_time;
+    msg_stream << key << snd_time_us;
 
     std::string tmp_str = msg_stream.str();
     memcpy(&msg_.data[0], tmp_str.c_str(), tmp_str.size());
 
     pub_->publish(msg_);
 
-    if (key == '1') {
-      // stop timer
-      timer_->cancel();
-
-      std::cout << "Messages sent           : " << snd_pkgs_ - warmups_ << std::endl;
-      std::cout << "----------------------------------------" << std::endl;
-
-      // shutdown here
-      rclcpp::shutdown();
+    if (key == '0') {
+      snd_pkgs_++;
     }
-
-    snd_pkgs_++;
   }
 
 private:
@@ -116,9 +108,8 @@ private:
   std_msgs::msg::String msg_;
   size_t snd_pkgs_ = 0;
   size_t runs_ = 0;
-  const size_t warmups_ = 10;
-  uint64_t last_warmup_packet_time_ = 0;
-  uint64_t warmup_delay_us_ = 10000;
+  uint64_t warmup_time_ms_ = 0;
+  uint64_t start_time_us_ = 0;
 };
 
 }  // namespace latency_snd

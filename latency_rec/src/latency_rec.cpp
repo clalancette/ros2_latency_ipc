@@ -31,8 +31,8 @@ namespace latency_rec
 class LatencyRec final : public rclcpp::Node
 {
 public:
-  LatencyRec(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
-  : rclcpp::Node("LatencyRec", options)
+  LatencyRec(rclcpp::NodeOptions options = rclcpp::NodeOptions())
+  : rclcpp::Node("LatencyRec", options.use_intra_process_comms(false))
   {
     // prepare timestamp array to avoid allocations
     latency_array_.reserve(10000);
