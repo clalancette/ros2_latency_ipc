@@ -40,6 +40,7 @@ rclcpp_components_register_node(${PROJECT_NAME}_lib_raw
 )
 
 install(TARGETS
+  ${PROJECT_NAME}_lib
   ${PROJECT_NAME}_lib_raw
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
