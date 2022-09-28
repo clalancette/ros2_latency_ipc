@@ -27,8 +27,21 @@ rclcpp_components_register_node(${PROJECT_NAME}_lib
   EXECUTABLE latency_snd
 )
 
+add_library(${PROJECT_NAME}_lib_raw SHARED src/latency_snd_raw.cpp)
+target_link_libraries(${PROJECT_NAME}_lib_raw
+  rclcpp::rclcpp
+  rclcpp_components::component
+  ${std_msgs_TARGETS}
+)
+
+rclcpp_components_register_node(${PROJECT_NAME}_lib_raw
+  PLUGIN "latency_snd::LatencySndRaw"
+  EXECUTABLE latency_snd_raw
+)
+
 install(TARGETS
   ${PROJECT_NAME}_lib
+  ${PROJECT_NAME}_lib_raw
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
