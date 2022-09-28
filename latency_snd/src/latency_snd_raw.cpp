@@ -67,7 +67,7 @@ public:
   void OnPublish()
   {
     uint64_t snd_time_us = std::chrono::duration_cast<std::chrono::microseconds>(
-      std::chrono::steady_clock::now().time_since_epoch()).count();
+      std::chrono::system_clock::now().time_since_epoch()).count();
 
     if (start_time_us_ == 0) {
       start_time_us_ = snd_time_us;
