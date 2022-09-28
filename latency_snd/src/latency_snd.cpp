@@ -99,6 +99,8 @@ public:
 
     if (key == '0') {
       snd_pkgs_++;
+    } else if (key == '1') {
+      rclcpp::shutdown();
     }
   }
 
